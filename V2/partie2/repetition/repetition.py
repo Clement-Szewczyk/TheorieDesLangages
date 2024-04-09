@@ -1,6 +1,6 @@
 import sys
 sys.path.append('../../')
-from automate import Automate, repetition
+from automate import Automate
 
 import os
 from IPython.display import display, Image
@@ -24,6 +24,6 @@ print("\n\n")
 
 # Repetition de l'automate 1
 print("Repetition de l'automate 1 :\n")
-automate = repetition(automate1)
+automate = automate1.repetition()
 print(automate)
 automate.to_png('repet')

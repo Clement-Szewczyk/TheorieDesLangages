@@ -4,7 +4,7 @@ from graphviz import Digraph
 
 
 class Automate:
-
+    
     def __init__(self, alphabet):
         self.etats = []
         self.alphabet = alphabet
@@ -86,19 +86,44 @@ class Automate:
                     symbole = ' '.join(symbole)
                 f.write(f"{depart} {symbole} {arrivee}\n")
 
-    def etat_poubelle(self):
-        self.ajouter_etat('poubelle')
-        for symbole in self.alphabet:
-            if symbole == '':
-                continue
-            self.ajouter_transition('poubelle', symbole, 'poubelle')
+
+    def repetition(self):
+        alphabet = self.alphabet
+
+
+        alphabet.add('ε')
+        automate_repetition = Automate(alphabet)
+        
+        # Ajout état initial et terminal
+        automate_repetition.ajouter_etat('repet', initial=True, terminal=True)
+
+        # Ajout des états de l'automate initial
+        for etat in self.etats:
+            automate_repetition.etats.append(etat)
+        
+        # Ajout des transitions de l'automate initial
+        for transition in self.transitions:
+            automate_repetition.ajouter_transition(transition.depart, transition.symbole, transition.arrivee)
+        
+        #repet lié aux état initiaux
+        for etat in self.etats:
+            if etat.initial:
+                automate_repetition.ajouter_transition('repet', 'ε', etat.nom)
+            if etat.terminal:
+                automate_repetition.ajouter_transition(etat.nom, 'ε', 'repet')
+        
+
+        return automate_repetition
 
 
 
     def completer(self):
-        self.alphabet.add('')
+        alphabet = list(self.alphabet)
+        self.alphabet.add('ε')
         self.ajouter_etat('poubelle')
         for etat in self.etats:
+            if etat.nom == 'poubelle':
+                self.ajouter_transition('poubelle', alphabet, 'poubelle')
             # Liste des symboles de transition pour l'état
             symboles = []
             for transition in self.transitions:
@@ -107,14 +132,11 @@ class Automate:
                     for s in symbole:
                         symboles.append(s)
             
-            alphabet = list(self.alphabet)
+            
             
             for symbole in alphabet:
-                if symbole == '':
-                    continue
                 if symbole not in symboles:
                     self.ajouter_transition(etat.nom, symbole, 'poubelle')
-                    etat_poubelle = True
             
         return self
     
@@ -155,7 +177,7 @@ class Automate:
             for e in etat:
                 etat_en_cours.append(e)
             for symbole in self.alphabet:
-                if symbole == '':
+                if symbole == 'ε':
                     continue
                 etats_arrivee = []
                 for etat_courant in etat:
@@ -230,7 +252,7 @@ class Automate:
         # Création des transitions
         for etat in table:
             for symbole in self.alphabet:
-                if symbole == '':
+                if symbole == 'ε':
                     continue
                 if symbole not in table[etat]:
                     continue
@@ -422,7 +444,7 @@ def union(automate1, automate2):
     alphabet = automate1.alphabet.union(automate2.alphabet)
     automate_union = Automate(alphabet)
     # Ajout du symbole vide
-    alphabet.add('')
+    alphabet.add('ε')
 
     #Renommer les états de l'automate 1 et 2
     for etat in automate1.etats:
@@ -437,11 +459,11 @@ def union(automate1, automate2):
     for etat in automate1.etats:
         if etat.initial:
             etat.initial = False
-            automate_union.ajouter_transition('initial', '', etat.nom)
+            automate_union.ajouter_transition('initial', 'ε', etat.nom)
     for etat in automate2.etats:
         if etat.initial:
             etat.initial = False
-            automate_union.ajouter_transition('initial', '', etat.nom)
+            automate_union.ajouter_transition('initial', 'ε', etat.nom)
     
     # Ajout des états de l'automate 1 et 2
     for etat in automate1.etats:
@@ -471,7 +493,7 @@ def concatenation(automate1, automate2):
     #Union des alphabets
     alphabet = automate1.alphabet.union(automate2.alphabet)
     #ajout du symbole vide
-    alphabet.add('')
+    alphabet.add('ε')
 
     #Renommer les états de l'automate 1 et 2
     for etat in automate1.etats:
@@ -489,7 +511,7 @@ def concatenation(automate1, automate2):
         if etat.terminal:
             etat.terminal = False
             # transition vers temporaire
-            automate_concat.ajouter_transition(etat.nom, '', 'temporaire')
+            automate_concat.ajouter_transition(etat.nom, 'ε', 'temporaire')
         automate_concat.etats.append(etat)
     for transition in automate1.transitions:
         depart = 'A1_' + transition.depart
@@ -501,7 +523,7 @@ def concatenation(automate1, automate2):
         if etat.initial:
             etat.initial = False
             # transition de temporaire vers l'etat initial
-            automate_concat.ajouter_transition('temporaire', '',etat.nom)
+            automate_concat.ajouter_transition('temporaire', 'ε',etat.nom)
         automate_concat.etats.append(etat)
     for transition in automate2.transitions:
         depart = 'A2_' + transition.depart
