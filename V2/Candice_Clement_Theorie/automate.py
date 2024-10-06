@@ -263,6 +263,8 @@ class Automate:
                     automate_determinise.transitions.append(transition)
                 else:
                     continue
+        
+
 
         return automate_determinise
     
